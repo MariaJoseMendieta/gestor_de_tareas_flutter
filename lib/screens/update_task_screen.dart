@@ -107,8 +107,9 @@ class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Editar Tarea', style: kTextStyleAppBar),
-        backgroundColor: Color(0xFF0569B4),
+        backgroundColor: kMainColor,
       ),
+      backgroundColor: kBackgroundColorApp,
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -116,7 +117,7 @@ class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
           child: ListView(
             children: [
               Card(
-                color: Colors.white,
+                color: kCardsColor,
                 elevation: 5.0,
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 2.0),
@@ -140,7 +141,7 @@ class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
                 ),
               ),
               Card(
-                color: Colors.white,
+                color: kCardsColor,
                 elevation: 5.0,
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 2.0),
@@ -172,7 +173,7 @@ class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
                     child: SizedBox(
                       height: 110.0,
                       child: Card(
-                        color: Colors.white,
+                        color: kCardsColor,
                         elevation: 5.0,
                         child: Padding(
                           padding: const EdgeInsets.all(4.0),
@@ -194,7 +195,7 @@ class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
                     child: SizedBox(
                       height: 110.0,
                       child: Card(
-                        color: Colors.white,
+                        color: kCardsColor,
                         elevation: 5.0,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -245,7 +246,7 @@ class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
               ),
               SizedBox(height: 10),
               Card(
-                color: Colors.white,
+                color: kCardsColor,
                 elevation: 5.0,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -291,7 +292,7 @@ class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
                   ElevatedButton(
                     onPressed: _updateTask,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF0569B4),
+                      backgroundColor: kMainColor,
                     ),
                     child: Text(
                       'Guardar Cambios',

@@ -57,26 +57,24 @@ class TaskDetailScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Detalles de la Tarea', style: kTextStyleAppBar),
-        backgroundColor: Color(0xFF0569B4),
+        backgroundColor: kMainColor,
       ),
+      backgroundColor: kBackgroundColorApp,
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Título:", style: TextStyle(fontWeight: FontWeight.bold)),
+            Text("Título:", style: kTextStyleDetailScreen),
             Text(title),
             SizedBox(height: 16),
-            Text("Descripción:", style: TextStyle(fontWeight: FontWeight.bold)),
+            Text("Descripción:", style: kTextStyleDetailScreen),
             Text(description ?? 'Sin descripción'),
             SizedBox(height: 16),
-            Text(
-              "Fecha de vencimiento:",
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
+            Text("Fecha de vencimiento:", style: kTextStyleDetailScreen),
             Text(formattedDate),
             SizedBox(height: 16),
-            Text("Prioridad:", style: TextStyle(fontWeight: FontWeight.bold)),
+            Text("Prioridad:", style: kTextStyleDetailScreen),
             Card(
               color: _getPriorityColor(priority),
               child: Padding(
@@ -85,7 +83,7 @@ class TaskDetailScreen extends StatelessWidget {
               ),
             ),
             SizedBox(height: 16),
-            Text("Estado:", style: TextStyle(fontWeight: FontWeight.bold)),
+            Text("Estado:", style: kTextStyleDetailScreen),
             Card(
               color: _getStatusColor(status),
               child: Padding(

@@ -12,7 +12,6 @@ class AddTaskScreen extends StatefulWidget {
 }
 
 class _AddTaskScreenState extends State<AddTaskScreen> {
-  //const AddTaskScreen({super.key});
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _titleController = TextEditingController();
 
@@ -79,10 +78,10 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color(0xFF0569B4),
+        backgroundColor: kMainColor,
         title: Text('Agregar Tarea', style: kTextStyleAppBar),
       ),
-      backgroundColor: Color(0xFFF5FAFA),
+      backgroundColor: kBackgroundColorApp,
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -90,7 +89,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
           child: ListView(
             children: [
               Card(
-                color: Colors.white,
+                color: kCardsColor,
                 elevation: 5.0,
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 2.0),
@@ -114,7 +113,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 ),
               ),
               Card(
-                color: Colors.white,
+                color: kCardsColor,
                 elevation: 5.0,
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 2.0),
@@ -168,7 +167,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                     child: SizedBox(
                       height: 110.0,
                       child: Card(
-                        color: Colors.white,
+                        color: kCardsColor,
                         elevation: 5.0,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -218,7 +217,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 ],
               ),
               Card(
-                color: Colors.white,
+                color: kCardsColor,
                 elevation: 5.0,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -264,7 +263,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   ElevatedButton(
                     onPressed: _submit,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF0569B4),
+                      backgroundColor: kMainColor,
                     ),
                     child: Text(
                       'Guardar',
