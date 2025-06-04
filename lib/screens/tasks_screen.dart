@@ -36,6 +36,7 @@ class _TasksScreenState extends State<TasksScreen> {
                 children: [
                   Expanded(
                     child: DropdownButtonFormField<String>(
+                      dropdownColor: kDropdownColor,
                       isExpanded: true,
                       value: _selectedPriority,
                       hint: Text('Prioridad'),
@@ -57,6 +58,7 @@ class _TasksScreenState extends State<TasksScreen> {
                   SizedBox(width: 10.0),
                   Expanded(
                     child: DropdownButtonFormField<String>(
+                      dropdownColor: kDropdownColor,
                       isExpanded: true,
                       value: _selectedStatus,
                       hint: Text('Estado'),
@@ -87,6 +89,7 @@ class _TasksScreenState extends State<TasksScreen> {
                   SizedBox(width: 10.0),
                   Expanded(
                     child: DropdownButtonFormField<String>(
+                      dropdownColor: kDropdownColor,
                       isExpanded: true,
                       value: _selectedDueDate,
                       hint: Text('Vencimiento'),
@@ -334,17 +337,27 @@ class TaskCard extends StatelessWidget {
     );
 
     if (shouldDelete == true) {
-      try {
-        await _firestore.collection('tasks').doc(documentId).delete();
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Tarea eliminada')));
-      } catch (e) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error al eliminar')));
-      }
+      // Eliminar documento de Firestore
+      await FirebaseFirestore.instance
+          .collection('tasks')
+          .doc(documentId)
+          .delete();
+
+      // Cerrar la pantalla de detalles
+      Navigator.of(context).pop();
     }
+    // if (shouldDelete == true) {
+    //   try {
+    //     await _firestore.collection('tasks').doc(documentId).delete();
+    //     ScaffoldMessenger.of(
+    //       context,
+    //     ).showSnackBar(SnackBar(content: Text('Tarea eliminada')));
+    //   } catch (e) {
+    //     ScaffoldMessenger.of(
+    //       context,
+    //     ).showSnackBar(SnackBar(content: Text('Error al eliminar')));
+    //   }
+    // }
   }
 
   @override

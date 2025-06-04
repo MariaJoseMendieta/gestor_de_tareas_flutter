@@ -18,3 +18,4 @@ const kDescriptionStyle = TextStyle(color: Colors.grey);
 const kMainColor = Color(0xFF0569B4);
 const kBackgroundColorApp = Color(0xFFF5FAFA);
 const kCardsColor = Colors.white;
+const kDropdownColor = Colors.white;

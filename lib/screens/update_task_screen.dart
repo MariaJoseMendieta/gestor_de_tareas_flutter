@@ -78,6 +78,8 @@ class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
       _titleController.text.trim(),
       widget.documentId,
     );
+    // Asegura de que el widget aún está en el árbol antes de usar context
+    if (!mounted) return;
     if (exists) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Ya existe otra tarea con ese título')),
@@ -95,10 +97,12 @@ class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
         'status': _selectedStatus,
       });
 
+      if (!mounted) return;
+
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Tarea actualizada')));
-      Navigator.pop(context);
+      Navigator.popUntil(context, (route) => route.isFirst);
     }
   }
 
@@ -108,6 +112,9 @@ class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
       appBar: AppBar(
         title: Text('Editar Tarea', style: kTextStyleAppBar),
         backgroundColor: kMainColor,
+        iconTheme: IconThemeData(
+          color: Colors.white, // Cambia esto al color que desees
+        ),
       ),
       backgroundColor: kBackgroundColorApp,
       body: Padding(
@@ -212,6 +219,7 @@ class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
                                 horizontal: 8.0,
                               ),
                               child: DropdownButtonFormField<String>(
+                                dropdownColor: kDropdownColor,
                                 isExpanded: true,
                                 value: _selectedPriority,
                                 items: [
@@ -258,6 +266,7 @@ class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
                     Padding(
                       padding: const EdgeInsets.fromLTRB(8.0, 0.0, 8.0, 8.0),
                       child: DropdownButtonFormField<String>(
+                        dropdownColor: kDropdownColor,
                         isExpanded: true,
                         value: _selectedStatus,
                         items: [

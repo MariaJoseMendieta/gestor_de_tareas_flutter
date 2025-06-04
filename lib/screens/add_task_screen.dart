@@ -80,6 +80,9 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       appBar: AppBar(
         backgroundColor: kMainColor,
         title: Text('Agregar Tarea', style: kTextStyleAppBar),
+        iconTheme: IconThemeData(
+          color: Colors.white, // Cambia esto al color que desees
+        ),
       ),
       backgroundColor: kBackgroundColorApp,
       body: Padding(
@@ -147,16 +150,15 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                       child: Card(
                         color: Colors.white,
                         elevation: 5.0,
-                        child: Padding(
-                          padding: const EdgeInsets.all(4.0),
+                        child: Center(
                           child: ListTile(
                             title: Text(
                               _selectedDate == null
-                                  ? 'Fecha de vencimiento \n DD/MM/AAAA'
+                                  ? 'Fecha de vencimiento \nDD/MM/AAAA'
                                   : 'Fecha de vencimiento ${DateFormat('dd/MM/yyyy').format(_selectedDate!)}',
                               style: TextStyle(fontSize: 15.0),
                             ),
-                            trailing: Icon(Icons.calendar_today),
+                            trailing: Icon(Icons.calendar_today, size: 22.0),
                             onTap: _pickDate,
                           ),
                         ),
@@ -184,6 +186,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                                 horizontal: 8.0,
                               ),
                               child: DropdownButtonFormField<String>(
+                                dropdownColor: kDropdownColor,
                                 isExpanded: true,
                                 value: _selectedPriority,
                                 items: [
@@ -229,6 +232,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                     Padding(
                       padding: const EdgeInsets.fromLTRB(8.0, 0.0, 8.0, 8.0),
                       child: DropdownButtonFormField<String>(
+                        dropdownColor: kDropdownColor,
                         isExpanded: true,
                         value: _selectedStatus,
                         items: [
