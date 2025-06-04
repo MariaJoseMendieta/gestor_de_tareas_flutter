@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "715295817272",
+    "project_id": "gestor-tareas-cf23f",
+    "storage_bucket": "gestor-tareas-cf23f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:715295817272:android:421977c0707c077cd5b0cd",
+        "android_client_info": {
+          "package_name": "majomendieta.com.gestor_de_tareas_flutter"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDTndLoMh_wPir9a70eKvLnh3e6Ie273lY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
