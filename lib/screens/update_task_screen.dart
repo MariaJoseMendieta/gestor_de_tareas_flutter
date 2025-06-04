@@ -1,33 +1,58 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 import 'package:gestor_de_tareas_flutter/constants.dart';
 
 final _firestore = FirebaseFirestore.instance;
 
-class AddTaskScreen extends StatefulWidget {
-  const AddTaskScreen({super.key});
+class UpdateTaskScreen extends StatefulWidget {
+  const UpdateTaskScreen({
+    super.key,
+    required this.documentId,
+    required this.title,
+    this.description,
+    this.dueDate,
+    this.priority = 'Media',
+    this.status = 'Pendiente',
+  });
+
+  final String documentId;
+  final String title;
+  final String? description;
+  final Timestamp? dueDate;
+  final String priority;
+  final String status;
+
   @override
-  State<AddTaskScreen> createState() => _AddTaskScreenState();
+  State<UpdateTaskScreen> createState() => _UpdateTaskScreenState();
 }
 
-class _AddTaskScreenState extends State<AddTaskScreen> {
-  //const AddTaskScreen({super.key});
+class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _titleController = TextEditingController();
 
-  final TextEditingController _descController = TextEditingController();
-
+  late TextEditingController _titleController;
+  late TextEditingController _descriptionController;
+  DateTime? _selectedDate;
   String _selectedPriority = 'Media';
   String _selectedStatus = 'Pendiente';
 
-  DateTime? _selectedDate;
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController(text: widget.title);
+    _descriptionController = TextEditingController(
+      text: widget.description ?? '',
+    );
+    _selectedDate = widget.dueDate?.toDate();
+    _selectedPriority = widget.priority;
+    _selectedStatus = widget.status;
+  }
 
   void _pickDate() async {
     final now = DateTime.now();
     final picked = await showDatePicker(
       context: context,
-      initialDate: now,
+      initialDate: _selectedDate ?? DateTime.now(),
       firstDate: now,
       lastDate: DateTime(now.year + 5),
     );
@@ -36,41 +61,43 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     }
   }
 
-  Future<bool> taskTitleExists(String title) async {
+  Future<bool> taskTitleExists(String title, String excludeId) async {
     final query =
         await _firestore
             .collection('tasks')
-            .where('title', isEqualTo: title)
+            .where('title', isEqualTo: title.trim())
             .get();
-    return query.docs.isNotEmpty;
+
+    // Si existe una tarea con ese título y NO es la misma que estamos editando
+    return query.docs.any((doc) => doc.id != excludeId);
   }
 
-  void _submit() async {
-    if (_formKey.currentState!.validate()) {
-      final exists = await taskTitleExists(_titleController.text.trim());
+  Future<void> _updateTask() async {
+    // Verificar si el título ya existe en otra tarea
+    final exists = await taskTitleExists(
+      _titleController.text.trim(),
+      widget.documentId,
+    );
+    if (exists) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ya existe otra tarea con ese título')),
+      );
+      return;
+    }
 
-      if (exists) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ya existe una tarea con ese título')),
-        );
-        return; // No guardar
-      }
-      if (_selectedDate == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Por favor selecciona una fecha de vencimiento'),
-          ),
-        );
-        return;
-      }
-      //Añadir la tarea a la colección 'tasks' en Firestore
-      await _firestore.collection('tasks').add({
+    if (_formKey.currentState!.validate()) {
+      await _firestore.collection('tasks').doc(widget.documentId).update({
         'title': _titleController.text.trim(),
-        'description': _descController.text.trim(),
-        'dueDate': _selectedDate!,
+        'description': _descriptionController.text.trim(),
+        'dueDate':
+            _selectedDate != null ? Timestamp.fromDate(_selectedDate!) : null,
         'priority': _selectedPriority,
         'status': _selectedStatus,
       });
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Tarea actualizada')));
       Navigator.pop(context);
     }
   }
@@ -79,10 +106,9 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        title: Text('Editar Tarea', style: kTextStyleAppBar),
         backgroundColor: Color(0xFF0569B4),
-        title: Text('Agregar Tarea', style: kTextStyleAppBar),
       ),
-      backgroundColor: Color(0xFFF5FAFA),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -98,7 +124,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                     controller: _titleController,
                     maxLength: 150,
                     decoration: InputDecoration(
-                      hintText: 'Título *',
+                      labelText: 'Título *',
                       counterText: '',
                     ),
                     validator: (value) {
@@ -121,9 +147,9 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   child: TextFormField(
                     maxLength: 1000,
                     maxLines: null,
-                    controller: _descController,
+                    controller: _descriptionController,
                     decoration: InputDecoration(
-                      hintText: 'Descripción (opcional)',
+                      labelText: 'Descripción (opcional)',
                       counterText: '',
                     ),
                     validator: (value) {
@@ -217,6 +243,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   ),
                 ],
               ),
+              SizedBox(height: 10),
               Card(
                 color: Colors.white,
                 elevation: 5.0,
@@ -262,12 +289,12 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   ElevatedButton(
-                    onPressed: _submit,
+                    onPressed: _updateTask,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xFF0569B4),
                     ),
                     child: Text(
-                      'Guardar',
+                      'Guardar Cambios',
                       style: TextStyle(color: Colors.white),
                     ),
                   ),

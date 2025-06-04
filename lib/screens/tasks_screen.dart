@@ -4,6 +4,7 @@ import 'package:gestor_de_tareas_flutter/screens/add_task_screen.dart';
 import 'package:intl/intl.dart';
 import 'package:gestor_de_tareas_flutter/screens/task_detail_screen.dart';
 import 'package:gestor_de_tareas_flutter/constants.dart';
+import 'package:gestor_de_tareas_flutter/screens/update_task_screen.dart';
 
 final _firestore = FirebaseFirestore.instance;
 
@@ -279,7 +280,25 @@ class TaskCard extends StatelessWidget {
                         icon: Icon(Icons.delete),
                         onPressed: () => deleteTask(context),
                       ),
-                      IconButton(icon: Icon(Icons.edit), onPressed: () {}),
+                      IconButton(
+                        icon: Icon(Icons.edit),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (context) => UpdateTaskScreen(
+                                    documentId: documentId,
+                                    title: title,
+                                    description: description,
+                                    dueDate: dueDate,
+                                    priority: priority,
+                                    status: status,
+                                  ),
+                            ),
+                          );
+                        },
+                      ),
                       IconButton(
                         icon: Icon(Icons.remove_red_eye),
                         onPressed: () {
