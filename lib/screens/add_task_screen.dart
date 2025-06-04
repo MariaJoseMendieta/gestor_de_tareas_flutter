@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:gestor_de_tareas_flutter/constants.dart';
 
 final _firestore = FirebaseFirestore.instance;
 
 class AddTaskScreen extends StatefulWidget {
+  const AddTaskScreen({super.key});
   @override
   State<AddTaskScreen> createState() => _AddTaskScreenState();
 }
@@ -61,10 +63,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Color(0xFF0569B4),
-        title: Text(
-          'Agregar Tarea',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
+        title: Text('Agregar Tarea', style: kTextStyleAppBar),
       ),
       backgroundColor: Color(0xFFF5FAFA),
       body: Padding(

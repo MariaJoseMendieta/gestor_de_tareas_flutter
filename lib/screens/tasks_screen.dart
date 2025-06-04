@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gestor_de_tareas_flutter/screens/add_task_screen.dart';
 import 'package:intl/intl.dart';
 import 'package:gestor_de_tareas_flutter/screens/task_detail_screen.dart';
+import 'package:gestor_de_tareas_flutter/constants.dart';
 
 final _firestore = FirebaseFirestore.instance;
 
@@ -19,10 +20,7 @@ class _TasksScreenState extends State<TasksScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Color(0xFF0569B4),
-        title: Text(
-          'Gestor de Tareas',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
+        title: Text('Gestor de Tareas', style: kTextStyleAppBar),
       ),
       backgroundColor: Color(0xFFF5FAFA),
       body: SafeArea(
@@ -85,6 +83,7 @@ class TasksStream extends StatelessWidget {
             dueDate: taskDueDate,
             priority: taskPriority,
             status: taskStatus,
+            documentId: task.id,
           );
           taskCards.add(taskBubble);
         }
@@ -110,6 +109,7 @@ class TaskCard extends StatelessWidget {
     this.dueDate,
     this.priority = 'Media',
     this.status = 'Pendiente',
+    required this.documentId,
   });
 
   final String title;
@@ -117,6 +117,7 @@ class TaskCard extends StatelessWidget {
   final Timestamp? dueDate;
   final String priority;
   final String status;
+  final String documentId; // ID del documento en Firestore
 
   Color _getPriorityColor(String priority) {
     switch (priority.toLowerCase()) {
@@ -144,13 +145,47 @@ class TaskCard extends StatelessWidget {
     }
   }
 
+  // Elimina la tarea tras la confirmación del usuario.
+  void deleteTask(BuildContext context) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: Text('¿Eliminar tarea?'),
+            content: Text('Esta acción no se puede deshacer.'),
+            actions: [
+              TextButton(
+                child: Text('Cancelar'),
+                onPressed: () => Navigator.of(context).pop(false),
+              ),
+              TextButton(
+                child: Text('Eliminar'),
+                onPressed: () => Navigator.of(context).pop(true),
+              ),
+            ],
+          ),
+    );
+
+    if (shouldDelete == true) {
+      try {
+        await _firestore.collection('tasks').doc(documentId).delete();
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Tarea eliminada')));
+      } catch (e) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error al eliminar')));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.all(8.0),
       child: Column(
         children: [
-          //Mostrar el email del remitente encima del mensaje
           Card(
             elevation: 5.0,
             color: Colors.white,
@@ -158,7 +193,7 @@ class TaskCard extends StatelessWidget {
               padding: const EdgeInsets.all(8.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Expanded(
                     child: Column(
@@ -167,7 +202,7 @@ class TaskCard extends StatelessWidget {
                         Text(
                           title,
                           style: TextStyle(
-                            fontSize: 15.0,
+                            fontSize: 17.0,
                             fontWeight: FontWeight.bold,
                             color: Colors.black,
                           ),
@@ -238,8 +273,12 @@ class TaskCard extends StatelessWidget {
                     ),
                   ),
                   Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      IconButton(icon: Icon(Icons.delete), onPressed: () {}),
+                      IconButton(
+                        icon: Icon(Icons.delete),
+                        onPressed: () => deleteTask(context),
+                      ),
                       IconButton(icon: Icon(Icons.edit), onPressed: () {}),
                       IconButton(
                         icon: Icon(Icons.remove_red_eye),
@@ -254,6 +293,7 @@ class TaskCard extends StatelessWidget {
                                     dueDate: dueDate,
                                     priority: priority,
                                     status: status,
+                                    documentId: documentId,
                                   ),
                             ),
                           );
