@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gestor_de_tareas_flutter/screens/add_task_screen.dart';
+import 'package:intl/intl.dart';
+import 'package:gestor_de_tareas_flutter/screens/task_detail_screen.dart';
 
 final _firestore = FirebaseFirestore.instance;
 
@@ -116,32 +118,151 @@ class TaskCard extends StatelessWidget {
   final String priority;
   final String status;
 
+  Color _getPriorityColor(String priority) {
+    switch (priority.toLowerCase()) {
+      case 'alta':
+        return Colors.red;
+      case 'media':
+        return Colors.amber;
+      case 'baja':
+        return Colors.green;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'pendiente':
+        return Colors.grey;
+      case 'en progreso':
+        return Colors.amber;
+      case 'completada':
+        return Colors.green;
+      default:
+        return Colors.grey;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.all(10.0),
+      padding: EdgeInsets.all(8.0),
       child: Column(
         children: [
           //Mostrar el email del remitente encima del mensaje
-          Material(
+          Card(
             elevation: 5.0,
-            color: Color(0xFFDCEDC8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      vertical: 10.0,
-                      horizontal: 20.0,
-                    ),
-                    child: Text(
-                      title,
-                      style: TextStyle(fontSize: 15.0, color: Colors.black),
+            color: Colors.white,
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: TextStyle(
+                            fontSize: 15.0,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
+                        Text(
+                          description ?? '',
+                          style: TextStyle(color: Colors.grey),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Builder(
+                          builder: (context) {
+                            if (dueDate == null) {
+                              return Text(
+                                'Sin fecha',
+                                style: TextStyle(color: Colors.grey),
+                              );
+                            }
+
+                            final now = DateTime.now();
+                            final date = dueDate!.toDate();
+                            final difference = date.difference(now).inDays;
+
+                            Color dateColor;
+                            if (difference < 2) {
+                              dateColor = Colors.red;
+                            } else if (difference <= 5) {
+                              dateColor = Colors.amber[800]!;
+                            } else {
+                              dateColor = Colors.green;
+                            }
+
+                            return Text(
+                              DateFormat('dd/MM/yyyy').format(date),
+                              style: TextStyle(
+                                color: dateColor,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            );
+                          },
+                        ),
+                        Row(
+                          children: [
+                            Card(
+                              color: _getPriorityColor(priority),
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text(
+                                  priority,
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 10.0),
+                            Card(
+                              color: _getStatusColor(status),
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text(
+                                  status,
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
-                ),
-              ],
+                  Column(
+                    children: [
+                      IconButton(icon: Icon(Icons.delete), onPressed: () {}),
+                      IconButton(icon: Icon(Icons.edit), onPressed: () {}),
+                      IconButton(
+                        icon: Icon(Icons.remove_red_eye),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (context) => TaskDetailScreen(
+                                    title: title,
+                                    description: description,
+                                    dueDate: dueDate,
+                                    priority: priority,
+                                    status: status,
+                                  ),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ],
