@@ -66,13 +66,13 @@ lib/
 
 Sigue estos pasos para clonar y ejecutar la aplicación en tu máquina local:
 
-- Clona el repositorio: Abre una terminal y ejecuta
+- **Clona el repositorio**: Abre una terminal y ejecuta
    ```
-   git clone https://github.com/tu_usuario/gestor_de_tareas_flutter.git
+   git clone https://github.com/MariaJoseMendieta/gestor_de_tareas_flutter.git
    cd gestor_de_tareas_flutter
    ```
   
-- Asegúrate de tener Flutter instalado:
+- **Asegúrate de tener Flutter instalado**:
   Si no tienes Flutter instalado, sigue la guía oficial:
   👉 https://docs.flutter.dev/get-started/install
 
@@ -81,12 +81,12 @@ Sigue estos pasos para clonar y ejecutar la aplicación en tu máquina local:
     flutter doctor
     ```
 
-- Instala las dependencias del proyecto: Una vez estés en la carpeta del proyecto, ejecuta:
+- **Instala las dependencias del proyecto**: Una vez estés en la carpeta del proyecto, ejecuta:
     ```
     flutter pub get
     ```
   
-- Conecta un emulador o dispositivo físico y ejecuta la aplicación:
+- **Conecta un emulador o dispositivo físico y ejecuta la aplicación**:
     ```
     flutter run
     ```
