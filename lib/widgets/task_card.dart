@@ -1,11 +1,23 @@
+/*
+=============================================================================
+task_card.dart
+
+Widget que representa una tarjeta visual para mostrar la información de una
+tarea.
+Permite mostrar el título, descripción, fecha de vencimiento, prioridad y
+estado de la tarea.
+También ofrece acciones para eliminar, editar y ver detalles de la tarea.
+=============================================================================
+*/
+
 import 'package:flutter/material.dart';
 import 'package:gestor_de_tareas_flutter/constants.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart';
 import 'package:gestor_de_tareas_flutter/screens/task_detail_screen.dart';
 import 'package:gestor_de_tareas_flutter/screens/update_task_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 
-class TaskCard extends StatelessWidget {
+class TaskCard extends StatefulWidget {
   const TaskCard({
     super.key,
     required this.title,
@@ -21,8 +33,13 @@ class TaskCard extends StatelessWidget {
   final Timestamp? dueDate;
   final String priority;
   final String status;
-  final String documentId; // ID del documento en Firestore
+  final String documentId;
+  @override
+  State<TaskCard> createState() => _TaskCardState();
+}
 
+class _TaskCardState extends State<TaskCard> {
+  /// Devuelve el color asociado a la prioridad de la tarea.
   Color _getPriorityColor(String priority) {
     switch (priority.toLowerCase()) {
       case 'alta':
@@ -36,6 +53,7 @@ class TaskCard extends StatelessWidget {
     }
   }
 
+  /// Devuelve el color asociado al estado de la tarea.
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'pendiente':
@@ -49,8 +67,11 @@ class TaskCard extends StatelessWidget {
     }
   }
 
-  // Elimina la tarea tras la confirmación del usuario.
-  Future<void> deleteTask(BuildContext context) async {
+  /// Muestra un diálogo de confirmación para eliminar la tarea.
+  ///
+  /// Si el usuario confirma, elimina el documento de Firestore correspondiente.
+  /// Muestra un snackbar en caso de error.
+  Future<void> deleteTask() async {
     final shouldDelete = await showDialog<bool>(
       context: context,
       builder:
@@ -74,11 +95,12 @@ class TaskCard extends StatelessWidget {
       try {
         await FirebaseFirestore.instance
             .collection(kTasksCollection)
-            .doc(documentId)
+            .doc(widget.documentId)
             .delete();
-      } catch (e, stack) {
-        print('Error al eliminar tarea: $e');
-        print(stack);
+      } catch (e) {
+        // Verifica si el widget sigue montado
+        if (!mounted) return;
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error al eliminar la tarea. Intente de nuevo.'),
@@ -103,20 +125,26 @@ class TaskCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  // Información principal de la tarea
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(title, style: kCardTitleStyle),
+                        // Título
+                        Text(widget.title, style: kCardTitleStyle),
+
+                        // Descripción con límite de líneas y elipsis
                         Text(
-                          description ?? '',
+                          widget.description ?? '',
                           style: kDescriptionStyle,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
+
+                        // Fecha de vencimiento con color que indica proximidad o vencimiento
                         Builder(
                           builder: (context) {
-                            if (dueDate == null) {
+                            if (widget.dueDate == null) {
                               return Text(
                                 'Sin fecha',
                                 style: TextStyle(color: Colors.grey),
@@ -124,7 +152,7 @@ class TaskCard extends StatelessWidget {
                             }
 
                             final now = DateTime.now();
-                            final date = dueDate!.toDate();
+                            final date = widget.dueDate!.toDate();
                             final difference = date.difference(now).inDays;
 
                             Color dateColor;
@@ -149,25 +177,27 @@ class TaskCard extends StatelessWidget {
                             );
                           },
                         ),
+
+                        // Indicadores visuales para prioridad y estado
                         Row(
                           children: [
                             Card(
-                              color: _getPriorityColor(priority),
+                              color: _getPriorityColor(widget.priority),
                               child: Padding(
                                 padding: kPaddingCard,
                                 child: Text(
-                                  priority,
+                                  widget.priority,
                                   style: TextStyle(color: Colors.white),
                                 ),
                               ),
                             ),
                             SizedBox(width: 10.0),
                             Card(
-                              color: _getStatusColor(status),
+                              color: _getStatusColor(widget.status),
                               child: Padding(
                                 padding: kPaddingCard,
                                 child: Text(
-                                  status,
+                                  widget.status,
                                   style: TextStyle(color: Colors.white),
                                 ),
                               ),
@@ -177,12 +207,14 @@ class TaskCard extends StatelessWidget {
                       ],
                     ),
                   ),
+
+                  // Botones de acción: eliminar, editar, ver detalle
                   Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
                         icon: Icon(Icons.delete),
-                        onPressed: () => deleteTask(context),
+                        onPressed: () => deleteTask(),
                       ),
                       IconButton(
                         icon: Icon(Icons.edit),
@@ -192,12 +224,12 @@ class TaskCard extends StatelessWidget {
                             MaterialPageRoute(
                               builder:
                                   (context) => UpdateTaskScreen(
-                                    documentId: documentId,
-                                    title: title,
-                                    description: description,
-                                    dueDate: dueDate,
-                                    priority: priority,
-                                    status: status,
+                                    documentId: widget.documentId,
+                                    title: widget.title,
+                                    description: widget.description,
+                                    dueDate: widget.dueDate,
+                                    priority: widget.priority,
+                                    status: widget.status,
                                   ),
                             ),
                           );
@@ -211,12 +243,12 @@ class TaskCard extends StatelessWidget {
                             MaterialPageRoute(
                               builder:
                                   (context) => TaskDetailScreen(
-                                    title: title,
-                                    description: description,
-                                    dueDate: dueDate,
-                                    priority: priority,
-                                    status: status,
-                                    documentId: documentId,
+                                    title: widget.title,
+                                    description: widget.description,
+                                    dueDate: widget.dueDate,
+                                    priority: widget.priority,
+                                    status: widget.status,
+                                    documentId: widget.documentId,
                                   ),
                             ),
                           );

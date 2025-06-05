@@ -1,3 +1,15 @@
+/*
+=============================================================================
+tasks_detail_screen.dart
+
+Esta pantalla muestra la información completa de una tarea almacenada en Firestore:
+Título, descripción, fecha de vencimiento, prioridad y estado.
+Permite editar o eliminar la tarea desde un menú desplegable.
+Convierte la tarea a formato JSON e imprime en consola.
+Muestra colores indicativos para prioridad y estado.
+=============================================================================
+*/
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gestor_de_tareas_flutter/constants.dart';
@@ -5,7 +17,8 @@ import 'package:gestor_de_tareas_flutter/screens/update_task_screen.dart';
 import 'dart:convert';
 import 'package:intl/intl.dart';
 
-class TaskDetailScreen extends StatelessWidget {
+/// Pantalla de detalles de una tarea almacenada en Firestore.
+class TaskDetailScreen extends StatefulWidget {
   final String title;
   final String? description;
   final Timestamp? dueDate;
@@ -23,6 +36,12 @@ class TaskDetailScreen extends StatelessWidget {
     required this.documentId,
   });
 
+  @override
+  State<TaskDetailScreen> createState() => _TaskDetailScreenState();
+}
+
+class _TaskDetailScreenState extends State<TaskDetailScreen> {
+  /// Devuelve un color dependiendo de la prioridad.
   Color _getPriorityColor(String priority) {
     switch (priority.toLowerCase()) {
       case 'alta':
@@ -36,6 +55,7 @@ class TaskDetailScreen extends StatelessWidget {
     }
   }
 
+  /// Devuelve un color dependiendo del estado.
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'pendiente':
@@ -49,7 +69,8 @@ class TaskDetailScreen extends StatelessWidget {
     }
   }
 
-  Future<void> _deleteTask(BuildContext context) async {
+  /// Elimina la tarea tras confirmación del usuario.
+  Future<void> _deleteTask() async {
     final shouldDelete = await showDialog<bool>(
       context: context,
       builder:
@@ -69,40 +90,49 @@ class TaskDetailScreen extends StatelessWidget {
           ),
     );
     if (shouldDelete == true) {
-      // Eliminar documento de Firestore
-      await FirebaseFirestore.instance
-          .collection(kTasksCollection)
-          .doc(documentId)
-          .delete();
+      try {
+        // Eliminar documento de Firestore
+        await FirebaseFirestore.instance
+            .collection(kTasksCollection)
+            .doc(widget.documentId)
+            .delete();
 
-      // Cerrar la pantalla de detalles
-      Navigator.of(context).pop();
+        // Verifica si el widget sigue montado
+        if (!mounted) return;
+
+        // Cerrar la pantalla de detalles
+        Navigator.of(context).pop();
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al eliminar la tarea. Intente de nuevo.'),
+          ),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final dueDateTime = dueDate?.toDate() ?? DateTime.now();
+    final dueDateTime = widget.dueDate?.toDate() ?? DateTime.now();
 
     // Formatear solo la fecha en formato YYYY-MM-DD
-    final formattedDateForJson =
-        "${dueDateTime.year.toString().padLeft(4, '0')}-"
-        "${dueDateTime.month.toString().padLeft(2, '0')}-"
-        "${dueDateTime.day.toString().padLeft(2, '0')}";
+    final formattedDateForJson = DateFormat('yyyy-MM-dd').format(dueDateTime);
 
     // Convertir los datos a JSON
     final Map<String, dynamic> taskAsJson = {
-      'task_id': documentId,
-      'title': title,
-      'description': description,
+      'task_id': widget.documentId,
+      'title': widget.title,
+      'description': widget.description,
       'dueDate': formattedDateForJson,
-      'priority': priority,
-      'status': status,
+      'priority': widget.priority,
+      'status': widget.status,
       'origin_framework': 'flutter',
       'user_email': 'majomendieta5@gmail.com',
     };
 
-    // 👇 Imprime en consola
+    // Imprime la tarea como JSON con formato legible
     const encoder = JsonEncoder.withIndent('  ');
     print('Tarea en formato JSON:\n${encoder.convert(taskAsJson)}');
 
@@ -121,18 +151,18 @@ class TaskDetailScreen extends StatelessWidget {
                   MaterialPageRoute(
                     builder:
                         (context) => UpdateTaskScreen(
-                          documentId: documentId,
-                          title: title,
-                          description: description,
-                          dueDate: dueDate,
-                          priority: priority,
-                          status: status,
+                          documentId: widget.documentId,
+                          title: widget.title,
+                          description: widget.description,
+                          dueDate: widget.dueDate,
+                          priority: widget.priority,
+                          status: widget.status,
                         ),
                   ),
                 );
               } else if (value == 'delete') {
                 // Acción para eliminar la tarea
-                _deleteTask(context);
+                _deleteTask();
               }
             },
             itemBuilder:
@@ -150,44 +180,61 @@ class TaskDetailScreen extends StatelessWidget {
       backgroundColor: kBackgroundColorApp,
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: ListView(
           children: [
-            Text("Título:", style: kTextStyleDetailScreen),
-            Text(title),
-            SizedBox(height: 16),
-            Text("Descripción:", style: kTextStyleDetailScreen),
-            Text(description ?? 'Sin descripción'),
-            SizedBox(height: 16),
-            Text("Fecha de vencimiento:", style: kTextStyleDetailScreen),
-            Text(
-              dueDate!.toDate().isBefore(
-                    DateTime(
-                      DateTime.now().year,
-                      DateTime.now().month,
-                      DateTime.now().day,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Visualización Título
+                Text("Título:", style: kTextStyleDetailScreen),
+                Text(widget.title),
+                SizedBox(height: 16),
+                // Visualización Descripción
+                Text("Descripción:", style: kTextStyleDetailScreen),
+                Text(widget.description ?? 'Sin descripción'),
+                SizedBox(height: 16),
+                // Visualización Fecha de Vencimiento
+                Text("Fecha de vencimiento:", style: kTextStyleDetailScreen),
+                Text(
+                  widget.dueDate!.toDate().isBefore(
+                        DateTime(
+                          DateTime.now().year,
+                          DateTime.now().month,
+                          DateTime.now().day,
+                        ),
+                      )
+                      ? '${DateFormat('dd/MM/yyyy').format(widget.dueDate!.toDate())} - Vencida'
+                      : DateFormat(
+                        'dd/MM/yyyy',
+                      ).format(widget.dueDate!.toDate()),
+                ),
+                SizedBox(height: 16),
+                // Visualización Prioridad
+                Text("Prioridad:", style: kTextStyleDetailScreen),
+                Card(
+                  color: _getPriorityColor(widget.priority),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(
+                      widget.priority,
+                      style: TextStyle(color: Colors.white),
                     ),
-                  )
-                  ? '${DateFormat('dd/MM/yyyy').format(dueDate!.toDate())} - Vencida'
-                  : DateFormat('dd/MM/yyyy').format(dueDate!.toDate()),
-            ),
-            SizedBox(height: 16),
-            Text("Prioridad:", style: kTextStyleDetailScreen),
-            Card(
-              color: _getPriorityColor(priority),
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(priority, style: TextStyle(color: Colors.white)),
-              ),
-            ),
-            SizedBox(height: 16),
-            Text("Estado:", style: kTextStyleDetailScreen),
-            Card(
-              color: _getStatusColor(status),
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(status, style: TextStyle(color: Colors.white)),
-              ),
+                  ),
+                ),
+                SizedBox(height: 16),
+                // Visualización Estado
+                Text("Estado:", style: kTextStyleDetailScreen),
+                Card(
+                  color: _getStatusColor(widget.status),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(
+                      widget.status,
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

@@ -1,10 +1,23 @@
+/*
+=============================================================================
+add_tasks_screen.dart
+
+Esta pantalla permite al usuario crear y registrar nuevas tareas
+en una colección de Firestore. La tarea incluye título, descripción,
+fecha de vencimiento, prioridad y estado. También valida entradas
+y evita duplicados por título.
+=============================================================================
+*/
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gestor_de_tareas_flutter/constants.dart';
 
+/// Referencia a la instancia principal de Firestore
 final _firestore = FirebaseFirestore.instance;
 
+/// Pantalla principal que permite agregar una nueva tarea
 class AddTaskScreen extends StatefulWidget {
   const AddTaskScreen({super.key});
   @override
@@ -12,15 +25,21 @@ class AddTaskScreen extends StatefulWidget {
 }
 
 class _AddTaskScreenState extends State<AddTaskScreen> {
+  // Crea una clave única para identificar y acceder al estado del formulario.
   final _formKey = GlobalKey<FormState>();
+
+  // Controladores de texto para los campos de entrada del formulario.
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descController = TextEditingController();
 
+  // Guarda la prioridad y estado seleccionado por el usuario
   String _selectedPriority = kPriorityMedia;
   String _selectedStatus = kStatusPendiente;
 
+  // Almacena la fecha de vencimiento seleccionada por el usuario
   DateTime? _selectedDate;
 
+  /// Abre un DatePicker para seleccionar la fecha de vencimiento
   Future<void> _pickDate() async {
     final now = DateTime.now();
     final picked = await showDatePicker(
@@ -34,6 +53,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     }
   }
 
+  /// Verifica si ya existe una tarea con el mismo título
   Future<bool> taskTitleExists(String title) async {
     final query =
         await _firestore
@@ -43,6 +63,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     return query.docs.isNotEmpty;
   }
 
+  /// Valida el formulario y guarda la tarea en Firestore
   Future<void> _submit() async {
     if (_formKey.currentState!.validate()) {
       final exists = await taskTitleExists(_titleController.text.trim());
@@ -78,6 +99,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     }
   }
 
+  /// Construcción del widget principal de la pantalla
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -93,11 +115,12 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
           key: _formKey,
           child: ListView(
             children: [
+              // Campo Título
               Card(
                 color: kCardsColor,
                 elevation: kElevationCard,
                 child: Padding(
-                  padding: kPaddingDropTitleDesc,
+                  padding: kPaddingTitleDesc,
                   child: TextFormField(
                     controller: _titleController,
                     maxLength: kMaxLengthTitle,
@@ -117,14 +140,16 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   ),
                 ),
               ),
+
+              // Campo Descripción
               Card(
                 color: kCardsColor,
                 elevation: kElevationCard,
                 child: Padding(
-                  padding: kPaddingDropTitleDesc,
+                  padding: kPaddingTitleDesc,
                   child: TextFormField(
                     maxLength: kMaxLengthDes,
-                    maxLines: null,
+                    maxLines: 4,
                     controller: _descController,
                     decoration: InputDecoration(
                       hintText: 'Descripción (opcional)',
@@ -132,9 +157,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                     ),
                     validator: (value) {
                       if (value != null && value.trim().isNotEmpty) {
-                        // if (value.trim().length < 500) {
-                        //   return 'Se recomienda una descripción de al menos 500 caracteres.';
-                        // }
                         if (value.trim().length > kMaxLengthDes) {
                           return 'Máximo 1000 caracteres permitidos.';
                         }
@@ -144,8 +166,11 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   ),
                 ),
               ),
+
+              // Fecha y Prioridad
               Row(
                 children: [
+                  // Selección de fecha
                   Expanded(
                     child: SizedBox(
                       height: 110.0,
@@ -167,6 +192,8 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                       ),
                     ),
                   ),
+
+                  // Selector de prioridad
                   Expanded(
                     child: SizedBox(
                       height: 110.0,
@@ -220,6 +247,8 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   ),
                 ],
               ),
+
+              // Selector de estado
               Card(
                 color: kCardsColor,
                 elevation: kElevationCard,
@@ -262,6 +291,8 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   ],
                 ),
               ),
+
+              // Botón de Guardar
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [

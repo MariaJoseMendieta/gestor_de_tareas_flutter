@@ -1,10 +1,25 @@
+/*
+=============================================================================
+update_tasks_screen.dart
+
+Esta pantalla permite al usuario editar una tarea existente en Firestore,
+actualizando su título, descripción, fecha de vencimiento, prioridad y estado.
+Incluye validaciones y verificación de duplicados por título.
+Utiliza Firestore como backend y presenta un formulario con campos adaptados
+a los datos ya registrados de la tarea seleccionada.
+=============================================================================
+*/
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:gestor_de_tareas_flutter/constants.dart';
 
+// Referencia global a Firestore
 final _firestore = FirebaseFirestore.instance;
 
+/// Pantalla para editar tareas existentes.
+/// Esta pantalla recibe los datos de la tarea seleccionada y permite modificarlos.
 class UpdateTaskScreen extends StatefulWidget {
   const UpdateTaskScreen({
     super.key,
@@ -28,14 +43,21 @@ class UpdateTaskScreen extends StatefulWidget {
 }
 
 class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
+  // Llave para el formulario, permite validarlo y controlarlo
   final _formKey = GlobalKey<FormState>();
 
+  // Controladores de texto para título y descripción
   late TextEditingController _titleController;
   late TextEditingController _descriptionController;
+
+  // Fecha seleccionada por el usuario
   DateTime? _selectedDate;
+
+  // Valores seleccionados por defecto para prioridad y estado
   String _selectedPriority = kPriorityMedia;
   String _selectedStatus = kStatusPendiente;
 
+  /// Inicializa los controladores con los valores actuales de la tarea
   @override
   void initState() {
     super.initState();
@@ -48,12 +70,16 @@ class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
     _selectedStatus = widget.status;
   }
 
+  /// Muestra un selector de fecha al usuario
   void _pickDate() async {
     final now = DateTime.now();
     final picked = await showDatePicker(
       context: context,
       initialDate: _selectedDate ?? DateTime.now(),
-      firstDate: _selectedDate ?? DateTime.now(),
+      firstDate:
+          (_selectedDate != null && _selectedDate!.isBefore(now))
+              ? _selectedDate!
+              : now,
       lastDate: DateTime(now.year + 5),
     );
     if (picked != null) {
@@ -61,6 +87,7 @@ class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
     }
   }
 
+  /// 🔎 Verifica si ya existe una tarea con el mismo título (ignorando la actual)
   Future<bool> taskTitleExists(String title, String excludeId) async {
     final query =
         await _firestore
@@ -72,14 +99,17 @@ class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
     return query.docs.any((doc) => doc.id != excludeId);
   }
 
+  /// Actualiza la tarea en Firestore luego de validar el formulario
   Future<void> _updateTask() async {
     // Verificar si el título ya existe en otra tarea
     final exists = await taskTitleExists(
       _titleController.text.trim(),
       widget.documentId,
     );
+
     // Asegura de que el widget aún está en el árbol antes de usar context
     if (!mounted) return;
+
     if (exists) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Ya existe otra tarea con ese título')),
@@ -108,6 +138,8 @@ class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Tarea actualizada')));
+
+      // Regresa a la pantalla principal
       Navigator.popUntil(context, (route) => route.isFirst);
     }
   }
@@ -127,11 +159,12 @@ class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
           key: _formKey,
           child: ListView(
             children: [
+              // Campo de título
               Card(
                 color: kCardsColor,
                 elevation: kElevationCard,
                 child: Padding(
-                  padding: kPaddingDropTitleDesc,
+                  padding: kPaddingTitleDesc,
                   child: TextFormField(
                     controller: _titleController,
                     maxLength: kMaxLengthTitle,
@@ -151,14 +184,16 @@ class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
                   ),
                 ),
               ),
+
+              // Campo de descripción
               Card(
                 color: kCardsColor,
                 elevation: kElevationCard,
                 child: Padding(
-                  padding: kPaddingDropTitleDesc,
+                  padding: kPaddingTitleDesc,
                   child: TextFormField(
                     maxLength: kMaxLengthDes,
-                    maxLines: null,
+                    maxLines: 4,
                     controller: _descriptionController,
                     decoration: InputDecoration(
                       labelText: 'Descripción (opcional)',
@@ -178,6 +213,8 @@ class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
                   ),
                 ),
               ),
+
+              // Fecha y Prioridad
               Row(
                 children: [
                   Expanded(
@@ -254,7 +291,8 @@ class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
                   ),
                 ],
               ),
-              SizedBox(height: 10),
+
+              // Estado
               Card(
                 color: kCardsColor,
                 elevation: kElevationCard,
@@ -297,6 +335,8 @@ class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
                   ],
                 ),
               ),
+
+              // Botón de guardar cambios
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [

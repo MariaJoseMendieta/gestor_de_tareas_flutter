@@ -1,11 +1,25 @@
+/*
+=============================================================================
+tasks_screen.dart
+
+Pantalla principal de la aplicación "Gestor de Tareas" que muestra la lista
+de tareas almacenadas en Firestore. Permite filtrar las tareas por prioridad,
+estado y tiempo restante para la fecha de vencimiento.
+
+Incluye una navegación para agregar nuevas tareas mediante otra pantalla.
+=============================================================================
+*/
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gestor_de_tareas_flutter/screens/add_task_screen.dart';
 import 'package:gestor_de_tareas_flutter/constants.dart';
 import 'package:gestor_de_tareas_flutter/widgets/task_card.dart';
 
+/// Instancia global de Firestore para acceder a la base de datos.
 final _firestore = FirebaseFirestore.instance;
 
+/// Pantalla principal que muestra la lista de tareas con filtros.
 class TasksScreen extends StatefulWidget {
   const TasksScreen({super.key});
 
@@ -28,10 +42,12 @@ class _TasksScreenState extends State<TasksScreen> {
       body: SafeArea(
         child: Column(
           children: [
+            // Filtros en forma de dropdowns para Prioridad, Estado y Vencimiento.
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8.0),
               child: Row(
                 children: [
+                  // Filtro por prioridad.
                   Expanded(
                     child: DropdownButtonFormField<String>(
                       dropdownColor: kDropdownColor,
@@ -55,14 +71,13 @@ class _TasksScreenState extends State<TasksScreen> {
                       ],
                       onChanged: (value) {
                         if (value != null) {
-                          setState(() {
-                            _selectedPriority = value;
-                          });
+                          setState(() => _selectedPriority = value);
                         }
                       },
                     ),
                   ),
                   SizedBox(width: 10.0),
+                  // Filtro por estado
                   Expanded(
                     child: DropdownButtonFormField<String>(
                       dropdownColor: kDropdownColor,
@@ -86,14 +101,13 @@ class _TasksScreenState extends State<TasksScreen> {
                       ],
                       onChanged: (value) {
                         if (value != null) {
-                          setState(() {
-                            _selectedStatus = value;
-                          });
+                          setState(() => _selectedStatus = value);
                         }
                       },
                     ),
                   ),
                   SizedBox(width: 10.0),
+                  // Filtro por vencimiento (fecha límite)
                   Expanded(
                     child: DropdownButtonFormField<String>(
                       dropdownColor: kDropdownColor,
@@ -117,9 +131,7 @@ class _TasksScreenState extends State<TasksScreen> {
                       ],
                       onChanged: (value) {
                         if (value != null) {
-                          setState(() {
-                            _selectedDueDate = value;
-                          });
+                          setState(() => _selectedDueDate = value);
                         }
                       },
                     ),
@@ -127,11 +139,15 @@ class _TasksScreenState extends State<TasksScreen> {
                 ],
               ),
             ),
+
+            // Lista de tareas filtradas en tiempo real
             TasksStream(
               selectedPriority: _selectedPriority,
               selectedStatus: _selectedStatus,
               selectedDueDate: _selectedDueDate,
             ),
+
+            // Botón para navegar a la pantalla para agregar una nueva tarea
             ElevatedButton(
               onPressed: () {
                 Navigator.push(
@@ -149,6 +165,7 @@ class _TasksScreenState extends State<TasksScreen> {
   }
 }
 
+/// Widget que muestra la lista de tareas en tiempo real con filtros aplicados.
 class TasksStream extends StatelessWidget {
   const TasksStream({
     super.key,
@@ -161,7 +178,7 @@ class TasksStream extends StatelessWidget {
   final String? selectedStatus;
   final String? selectedDueDate;
 
-  // Filtrar las tareas según cuánto tiempo falta para su fecha de vencimiento
+  /// Función para Filtrar las tareas según cuánto tiempo falta para su fecha de vencimiento.
   bool _shouldIncludeTask(Timestamp? dueDate) {
     if (selectedDueDate == null) return true;
     if (dueDate == null) return false;
@@ -185,11 +202,12 @@ class TasksStream extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
-      //Escucha la colección 'task' ordenada por 'timestamp' para actualizaciones en tiempo real
-      stream: _firestore.collection('tasks').snapshots(),
+      // Escucha la colección 'tasks' para actualizaciones en tiempo real
+      stream: _firestore.collection(kTasksCollection).snapshots(),
       builder: (context, snapshot) {
         //Mostrar indicador de carga mientras no hay datos
         if (!snapshot.hasData) {
+          // Mostrar indicador de carga mientras no hay datos
           return Center(
             child: CircularProgressIndicator(backgroundColor: kMainColor),
           );
@@ -197,7 +215,8 @@ class TasksStream extends StatelessWidget {
 
         // Acceder a los documentos recibidos de Firestore (Obtener todas las tareas)
         final allTasks = snapshot.data!.docs.toList();
-        //Filtrar las tareas una por una
+
+        // Filtrar tareas según los criterios seleccionados en los dropdowns
         final filteredTasks =
             allTasks.where((task) {
               final data = task.data() as Map<String, dynamic>;
@@ -226,8 +245,7 @@ class TasksStream extends StatelessWidget {
               return cumplePrioridad && cumpleEstado && cumpleVencimiento;
             }).toList();
 
-        // Ordenar cronológicamente de la tarea más próxima a la más lejana.
-        // Devuelve: -1 si a debe ir antes que b, 0 si son iguales y 1 si a debe ir después que b
+        // Ordenar las tareas por fecha de vencimiento, más próximas primero
         filteredTasks.sort((a, b) {
           //Extrae los datos del documento a y b en forma de un mapa
           final dataA = a.data() as Map<String, dynamic>;
@@ -261,6 +279,8 @@ class TasksStream extends StatelessWidget {
                 documentId: task.id,
               );
             }).toList();
+
+        // Mostrar la lista de tareas filtradas y ordenadas
         return Expanded(
           child: ListView(
             reverse: false,
