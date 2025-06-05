@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gestor_de_tareas_flutter/constants.dart';
 import 'package:gestor_de_tareas_flutter/screens/update_task_screen.dart';
 import 'dart:convert';
+import 'package:intl/intl.dart';
 
 class TaskDetailScreen extends StatelessWidget {
   final String title;
@@ -48,20 +49,20 @@ class TaskDetailScreen extends StatelessWidget {
     }
   }
 
-  void _eliminarTarea(BuildContext context) async {
+  Future<void> _deleteTask(BuildContext context) async {
     final shouldDelete = await showDialog<bool>(
       context: context,
       builder:
           (context) => AlertDialog(
-            title: Text('¿Eliminar tarea?'),
-            content: Text('Esta acción no se puede deshacer.'),
+            title: Text(kDeleteConfirmationTitle),
+            content: Text(kDeleteConfirmationMessage),
             actions: [
               TextButton(
-                child: Text('Cancelar', style: TextStyle(color: kMainColor)),
+                child: Text(kCancelLabel, style: TextStyle(color: kMainColor)),
                 onPressed: () => Navigator.of(context).pop(false),
               ),
               TextButton(
-                child: Text('Eliminar', style: TextStyle(color: kMainColor)),
+                child: Text(kDeleteLabel, style: TextStyle(color: kMainColor)),
                 onPressed: () => Navigator.of(context).pop(true),
               ),
             ],
@@ -70,7 +71,7 @@ class TaskDetailScreen extends StatelessWidget {
     if (shouldDelete == true) {
       // Eliminar documento de Firestore
       await FirebaseFirestore.instance
-          .collection('tasks')
+          .collection(kTasksCollection)
           .doc(documentId)
           .delete();
 
@@ -82,10 +83,6 @@ class TaskDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dueDateTime = dueDate?.toDate() ?? DateTime.now();
-    final formattedDate =
-        "${dueDateTime.day.toString().padLeft(2, '0')}/"
-        "${dueDateTime.month.toString().padLeft(2, '0')}/"
-        "${dueDateTime.year}";
 
     // Formatear solo la fecha en formato YYYY-MM-DD
     final formattedDateForJson =
@@ -113,9 +110,7 @@ class TaskDetailScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text('Detalles de la Tarea', style: kTextStyleAppBar),
         backgroundColor: kMainColor,
-        iconTheme: IconThemeData(
-          color: Colors.white, // Cambia esto al color que desees
-        ),
+        iconTheme: kIconThemeColor,
         actions: [
           PopupMenuButton<String>(
             onSelected: (value) {
@@ -137,7 +132,7 @@ class TaskDetailScreen extends StatelessWidget {
                 );
               } else if (value == 'delete') {
                 // Acción para eliminar la tarea
-                _eliminarTarea(context);
+                _deleteTask(context);
               }
             },
             itemBuilder:
@@ -165,7 +160,17 @@ class TaskDetailScreen extends StatelessWidget {
             Text(description ?? 'Sin descripción'),
             SizedBox(height: 16),
             Text("Fecha de vencimiento:", style: kTextStyleDetailScreen),
-            Text(formattedDate),
+            Text(
+              dueDate!.toDate().isBefore(
+                    DateTime(
+                      DateTime.now().year,
+                      DateTime.now().month,
+                      DateTime.now().day,
+                    ),
+                  )
+                  ? '${DateFormat('dd/MM/yyyy').format(dueDate!.toDate())} - Vencida'
+                  : DateFormat('dd/MM/yyyy').format(dueDate!.toDate()),
+            ),
             SizedBox(height: 16),
             Text("Prioridad:", style: kTextStyleDetailScreen),
             Card(

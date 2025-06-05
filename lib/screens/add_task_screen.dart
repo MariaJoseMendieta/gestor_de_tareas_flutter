@@ -14,15 +14,14 @@ class AddTaskScreen extends StatefulWidget {
 class _AddTaskScreenState extends State<AddTaskScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _titleController = TextEditingController();
-
   final TextEditingController _descController = TextEditingController();
 
-  String _selectedPriority = 'Media';
-  String _selectedStatus = 'Pendiente';
+  String _selectedPriority = kPriorityMedia;
+  String _selectedStatus = kStatusPendiente;
 
   DateTime? _selectedDate;
 
-  void _pickDate() async {
+  Future<void> _pickDate() async {
     final now = DateTime.now();
     final picked = await showDatePicker(
       context: context,
@@ -38,16 +37,18 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   Future<bool> taskTitleExists(String title) async {
     final query =
         await _firestore
-            .collection('tasks')
-            .where('title', isEqualTo: title)
+            .collection(kTasksCollection)
+            .where('title_lowercase', isEqualTo: title.toLowerCase().trim())
             .get();
     return query.docs.isNotEmpty;
   }
 
-  void _submit() async {
+  Future<void> _submit() async {
     if (_formKey.currentState!.validate()) {
       final exists = await taskTitleExists(_titleController.text.trim());
 
+      // Asegura de que el widget aún está en el árbol antes de usar context
+      if (!mounted) return;
       if (exists) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Ya existe una tarea con ese título')),
@@ -63,13 +64,16 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
         return;
       }
       //Añadir la tarea a la colección 'tasks' en Firestore
-      await _firestore.collection('tasks').add({
+      await _firestore.collection(kTasksCollection).add({
         'title': _titleController.text.trim(),
+        'title_lowercase': _titleController.text.toLowerCase().trim(),
         'description': _descController.text.trim(),
         'dueDate': _selectedDate!,
         'priority': _selectedPriority,
         'status': _selectedStatus,
       });
+      // Asegura de que el widget aún está en el árbol antes de usar context
+      if (!mounted) return;
       Navigator.pop(context);
     }
   }
@@ -80,9 +84,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       appBar: AppBar(
         backgroundColor: kMainColor,
         title: Text('Agregar Tarea', style: kTextStyleAppBar),
-        iconTheme: IconThemeData(
-          color: Colors.white, // Cambia esto al color que desees
-        ),
+        iconTheme: kIconThemeColor,
       ),
       backgroundColor: kBackgroundColorApp,
       body: Padding(
@@ -93,12 +95,12 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
             children: [
               Card(
                 color: kCardsColor,
-                elevation: 5.0,
+                elevation: kElevationCard,
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 2.0),
+                  padding: kPaddingDropTitleDesc,
                   child: TextFormField(
                     controller: _titleController,
-                    maxLength: 150,
+                    maxLength: kMaxLengthTitle,
                     decoration: InputDecoration(
                       hintText: 'Título *',
                       counterText: '',
@@ -107,7 +109,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                       if (value == null || value.trim().isEmpty) {
                         return 'Este campo es obligatorio';
                       }
-                      if (value.length > 150) {
+                      if (value.length > kMaxLengthTitle) {
                         return 'Máximo 150 caracteres';
                       }
                       return null;
@@ -117,11 +119,11 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
               ),
               Card(
                 color: kCardsColor,
-                elevation: 5.0,
+                elevation: kElevationCard,
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 2.0),
+                  padding: kPaddingDropTitleDesc,
                   child: TextFormField(
-                    maxLength: 1000,
+                    maxLength: kMaxLengthDes,
                     maxLines: null,
                     controller: _descController,
                     decoration: InputDecoration(
@@ -133,7 +135,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                         // if (value.trim().length < 500) {
                         //   return 'Se recomienda una descripción de al menos 500 caracteres.';
                         // }
-                        if (value.trim().length > 1000) {
+                        if (value.trim().length > kMaxLengthDes) {
                           return 'Máximo 1000 caracteres permitidos.';
                         }
                       }
@@ -148,8 +150,8 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                     child: SizedBox(
                       height: 110.0,
                       child: Card(
-                        color: Colors.white,
-                        elevation: 5.0,
+                        color: kCardsColor,
+                        elevation: kElevationCard,
                         child: Center(
                           child: ListTile(
                             title: Text(
@@ -170,37 +172,36 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                       height: 110.0,
                       child: Card(
                         color: kCardsColor,
-                        elevation: 5.0,
+                        elevation: kElevationCard,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Padding(
-                              padding: const EdgeInsets.all(8.0),
+                              padding: kPaddingDropPriority,
                               child: Text(
                                 'Prioridad',
                                 style: TextStyle(fontSize: 15.0),
                               ),
                             ),
                             Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8.0,
-                              ),
+                              padding: kPaddingDropPriority,
                               child: DropdownButtonFormField<String>(
                                 dropdownColor: kDropdownColor,
                                 isExpanded: true,
                                 value: _selectedPriority,
                                 items: [
                                   DropdownMenuItem(
-                                    value: 'Alta',
-                                    child: Text('Alta'),
+                                    value: kPriorityAlta,
+                                    child: Text(kPriorityAlta),
                                   ),
                                   DropdownMenuItem(
-                                    value: 'Media',
-                                    child: Text('Media'),
+                                    value: kPriorityMedia,
+                                    child: Text(kPriorityMedia),
                                   ),
                                   DropdownMenuItem(
-                                    value: 'Baja',
-                                    child: Text('Baja'),
+                                    value: kPriorityBaja,
+                                    child: Text(kPriorityBaja),
                                   ),
                                 ],
                                 onChanged: (value) {
@@ -221,7 +222,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
               ),
               Card(
                 color: kCardsColor,
-                elevation: 5.0,
+                elevation: kElevationCard,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -230,23 +231,23 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                       child: Text('Estado', style: TextStyle(fontSize: 15.0)),
                     ),
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(8.0, 0.0, 8.0, 8.0),
+                      padding: kPaddingDropStatus,
                       child: DropdownButtonFormField<String>(
                         dropdownColor: kDropdownColor,
                         isExpanded: true,
                         value: _selectedStatus,
                         items: [
                           DropdownMenuItem(
-                            value: 'Pendiente',
-                            child: Text('Pendiente'),
+                            value: kStatusPendiente,
+                            child: Text(kStatusPendiente),
                           ),
                           DropdownMenuItem(
-                            value: 'En Progreso',
-                            child: Text('En Progreso'),
+                            value: kStatusEnProgreso,
+                            child: Text(kStatusEnProgreso),
                           ),
                           DropdownMenuItem(
-                            value: 'Completada',
-                            child: Text('Completada'),
+                            value: kStatusCompletada,
+                            child: Text(kStatusCompletada),
                           ),
                         ],
                         onChanged: (value) {
@@ -269,10 +270,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: kMainColor,
                     ),
-                    child: Text(
-                      'Guardar',
-                      style: TextStyle(color: Colors.white),
-                    ),
+                    child: Text('Guardar', style: kTextStyleButton),
                   ),
                 ],
               ),

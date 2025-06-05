@@ -33,8 +33,8 @@ class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
   late TextEditingController _titleController;
   late TextEditingController _descriptionController;
   DateTime? _selectedDate;
-  String _selectedPriority = 'Media';
-  String _selectedStatus = 'Pendiente';
+  String _selectedPriority = kPriorityMedia;
+  String _selectedStatus = kStatusPendiente;
 
   @override
   void initState() {
@@ -53,7 +53,7 @@ class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
     final picked = await showDatePicker(
       context: context,
       initialDate: _selectedDate ?? DateTime.now(),
-      firstDate: now,
+      firstDate: _selectedDate ?? DateTime.now(),
       lastDate: DateTime(now.year + 5),
     );
     if (picked != null) {
@@ -64,8 +64,8 @@ class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
   Future<bool> taskTitleExists(String title, String excludeId) async {
     final query =
         await _firestore
-            .collection('tasks')
-            .where('title', isEqualTo: title.trim())
+            .collection(kTasksCollection)
+            .where('title_lowercase', isEqualTo: title.toLowerCase().trim())
             .get();
 
     // Si existe una tarea con ese título y NO es la misma que estamos editando
@@ -88,14 +88,20 @@ class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
     }
 
     if (_formKey.currentState!.validate()) {
-      await _firestore.collection('tasks').doc(widget.documentId).update({
-        'title': _titleController.text.trim(),
-        'description': _descriptionController.text.trim(),
-        'dueDate':
-            _selectedDate != null ? Timestamp.fromDate(_selectedDate!) : null,
-        'priority': _selectedPriority,
-        'status': _selectedStatus,
-      });
+      await _firestore
+          .collection(kTasksCollection)
+          .doc(widget.documentId)
+          .update({
+            'title': _titleController.text.trim(),
+            'title_lowercase': _titleController.text.toLowerCase().trim(),
+            'description': _descriptionController.text.trim(),
+            'dueDate':
+                _selectedDate != null
+                    ? Timestamp.fromDate(_selectedDate!)
+                    : null,
+            'priority': _selectedPriority,
+            'status': _selectedStatus,
+          });
 
       if (!mounted) return;
 
@@ -112,9 +118,7 @@ class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
       appBar: AppBar(
         title: Text('Editar Tarea', style: kTextStyleAppBar),
         backgroundColor: kMainColor,
-        iconTheme: IconThemeData(
-          color: Colors.white, // Cambia esto al color que desees
-        ),
+        iconTheme: kIconThemeColor,
       ),
       backgroundColor: kBackgroundColorApp,
       body: Padding(
@@ -125,12 +129,12 @@ class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
             children: [
               Card(
                 color: kCardsColor,
-                elevation: 5.0,
+                elevation: kElevationCard,
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 2.0),
+                  padding: kPaddingDropTitleDesc,
                   child: TextFormField(
                     controller: _titleController,
-                    maxLength: 150,
+                    maxLength: kMaxLengthTitle,
                     decoration: InputDecoration(
                       labelText: 'Título *',
                       counterText: '',
@@ -139,7 +143,7 @@ class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
                       if (value == null || value.trim().isEmpty) {
                         return 'Este campo es obligatorio';
                       }
-                      if (value.length > 150) {
+                      if (value.length > kMaxLengthTitle) {
                         return 'Máximo 150 caracteres';
                       }
                       return null;
@@ -149,11 +153,11 @@ class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
               ),
               Card(
                 color: kCardsColor,
-                elevation: 5.0,
+                elevation: kElevationCard,
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 2.0),
+                  padding: kPaddingDropTitleDesc,
                   child: TextFormField(
-                    maxLength: 1000,
+                    maxLength: kMaxLengthDes,
                     maxLines: null,
                     controller: _descriptionController,
                     decoration: InputDecoration(
@@ -165,7 +169,7 @@ class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
                         // if (value.trim().length < 500) {
                         //   return 'Se recomienda una descripción de al menos 500 caracteres.';
                         // }
-                        if (value.trim().length > 1000) {
+                        if (value.trim().length > kMaxLengthDes) {
                           return 'Máximo 1000 caracteres permitidos.';
                         }
                       }
@@ -181,9 +185,8 @@ class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
                       height: 110.0,
                       child: Card(
                         color: kCardsColor,
-                        elevation: 5.0,
-                        child: Padding(
-                          padding: const EdgeInsets.all(4.0),
+                        elevation: kElevationCard,
+                        child: Center(
                           child: ListTile(
                             title: Text(
                               _selectedDate == null
@@ -191,7 +194,7 @@ class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
                                   : 'Fecha de vencimiento ${DateFormat('dd/MM/yyyy').format(_selectedDate!)}',
                               style: TextStyle(fontSize: 15.0),
                             ),
-                            trailing: Icon(Icons.calendar_today),
+                            trailing: Icon(Icons.calendar_today, size: 22.0),
                             onTap: _pickDate,
                           ),
                         ),
@@ -203,37 +206,36 @@ class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
                       height: 110.0,
                       child: Card(
                         color: kCardsColor,
-                        elevation: 5.0,
+                        elevation: kElevationCard,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Padding(
-                              padding: const EdgeInsets.all(8.0),
+                              padding: kPaddingDropPriority,
                               child: Text(
                                 'Prioridad',
                                 style: TextStyle(fontSize: 15.0),
                               ),
                             ),
                             Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8.0,
-                              ),
+                              padding: kPaddingDropPriority,
                               child: DropdownButtonFormField<String>(
                                 dropdownColor: kDropdownColor,
                                 isExpanded: true,
                                 value: _selectedPriority,
                                 items: [
                                   DropdownMenuItem(
-                                    value: 'Alta',
-                                    child: Text('Alta'),
+                                    value: kPriorityAlta,
+                                    child: Text(kPriorityAlta),
                                   ),
                                   DropdownMenuItem(
-                                    value: 'Media',
-                                    child: Text('Media'),
+                                    value: kPriorityMedia,
+                                    child: Text(kPriorityMedia),
                                   ),
                                   DropdownMenuItem(
-                                    value: 'Baja',
-                                    child: Text('Baja'),
+                                    value: kPriorityBaja,
+                                    child: Text(kPriorityBaja),
                                   ),
                                 ],
                                 onChanged: (value) {
@@ -255,7 +257,7 @@ class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
               SizedBox(height: 10),
               Card(
                 color: kCardsColor,
-                elevation: 5.0,
+                elevation: kElevationCard,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -264,23 +266,23 @@ class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
                       child: Text('Estado', style: TextStyle(fontSize: 15.0)),
                     ),
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(8.0, 0.0, 8.0, 8.0),
+                      padding: kPaddingDropStatus,
                       child: DropdownButtonFormField<String>(
                         dropdownColor: kDropdownColor,
                         isExpanded: true,
                         value: _selectedStatus,
                         items: [
                           DropdownMenuItem(
-                            value: 'Pendiente',
-                            child: Text('Pendiente'),
+                            value: kStatusPendiente,
+                            child: Text(kStatusPendiente),
                           ),
                           DropdownMenuItem(
-                            value: 'En Progreso',
-                            child: Text('En Progreso'),
+                            value: kStatusEnProgreso,
+                            child: Text(kStatusEnProgreso),
                           ),
                           DropdownMenuItem(
-                            value: 'Completada',
-                            child: Text('Completada'),
+                            value: kStatusCompletada,
+                            child: Text(kStatusCompletada),
                           ),
                         ],
                         onChanged: (value) {
@@ -303,10 +305,7 @@ class _UpdateTaskScreenState extends State<UpdateTaskScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: kMainColor,
                     ),
-                    child: Text(
-                      'Guardar Cambios',
-                      style: TextStyle(color: Colors.white),
-                    ),
+                    child: Text('Guardar Cambios', style: kTextStyleButton),
                   ),
                 ],
               ),
