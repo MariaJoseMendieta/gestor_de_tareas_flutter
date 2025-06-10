@@ -15,6 +15,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gestor_de_tareas_flutter/screens/add_task_screen.dart';
 import 'package:gestor_de_tareas_flutter/constants.dart';
 import 'package:gestor_de_tareas_flutter/widgets/task_card.dart';
+import 'package:gestor_de_tareas_flutter/screens/api_screen.dart';
 
 /// Instancia global de Firestore para acceder a la base de datos.
 final _firestore = FirebaseFirestore.instance;
@@ -148,15 +149,31 @@ class _TasksScreenState extends State<TasksScreen> {
             ),
 
             // Botón para navegar a la pantalla para agregar una nueva tarea
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => AddTaskScreen()),
-                );
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: kMainColor),
-              child: Text('Agregar Tarea', style: kTextStyleButton),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => AddTaskScreen()),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: kMainColor),
+                  child: Text('Agregar Tarea', style: kTextStyleButton),
+                ),
+                SizedBox(width: 15.0),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => ApiScreen()),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: kMainColor),
+                  child: Text('API', style: kTextStyleButton),
+                ),
+              ],
             ),
           ],
         ),
